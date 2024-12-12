@@ -1,0 +1,14 @@
+{
+    "name": "poc-ts-option-and-result-type",
+    "private": true,
+    "version": "1.0.0",
+    "author": "LockBlock-dev",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w"
+    },
+    "devDependencies": {
+        "typescript": "^5.7.2"
+    }
+}
