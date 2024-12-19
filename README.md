@@ -10,6 +10,11 @@ While TypeScript supports [truthiness narrowing](https://www.typescriptlang.org/
 
 ## Overview
 
+-   [Option](#optiont)
+-   [Result](#resultt-e)
+-   [wrapException](#handling-exceptions-with-wrapexception)
+-   [Typed wrapException](#typed-variant-of-wrapexception)
+
 ### [`Option<T>`](./lib/option.ts)
 
 The `Option` type represent an optional value, either `Some` (a value is present) or `None` (no value). It removes ambiguity and is safer than relying on `null` or `undefined`.
@@ -68,6 +73,107 @@ function divide(dividend: number, divisor: number): Result<number, Error> {
 
 const res = divide(10, 2);
 // const res = divide(10, 0);
+
+if (res.isOk()) {
+    // infered number
+    console.log(res.unwrap());
+} else if (res.isErr()) {
+    // infered Error
+    console.error(res.unwrapErr().message);
+}
+```
+
+### Handling exceptions with [`wrapException`](./lib/wrapException.ts)
+
+The `wrapException` utility helps integrate `Result` with functions that throw exceptions. This works for both synchronous and asynchronous operations.
+
+**Synchronous Example:**
+
+```ts
+import { type Result } from "./result";
+import wrapException from "./wrapException";
+
+const thisThrows = () => {
+    throw new Error("Something went wrong");
+    return 42;
+};
+
+const res = wrapException(() => thisThrows());
+
+if (res.isOk()) {
+    // infered number
+    console.log(res.unwrap());
+} else if (res.isErr()) {
+    // infered any
+    console.error(res.unwrapErr().message);
+}
+```
+
+**Asynchronous Example:**
+
+```ts
+import { type Result } from "./result";
+import wrapException from "./wrapException";
+
+const thisThrowsAsync = async () => {
+    throw new Error("Async failure");
+
+    return await Promise.resolve(1);
+};
+
+const res = await wrapException(async () => thisThrowsAsync());
+
+if (res.isOk()) {
+    // infered number
+    console.log(res.unwrap());
+} else if (res.isErr()) {
+    // infered any
+    console.error(res.unwrapErr().message);
+}
+```
+
+### Typed variant of [`wrapException`](./lib/wrapException.ts)
+
+You can explicitly specify types for the success and error cases.
+
+**Synchronous Example:**
+
+```ts
+import { type Result } from "./result";
+import wrapException from "./wrapException";
+
+const thisThrows = () => {
+    throw new Error("Something went wrong");
+
+    return 1;
+};
+
+const res = wrapException<number, Error>(() => thisThrows());
+
+if (res.isOk()) {
+    // infered number
+    console.log(res.unwrap());
+} else if (res.isErr()) {
+    // infered Error
+    console.error(res.unwrapErr().message);
+}
+```
+
+**Asynchronous Example:**
+
+```ts
+import { type Result } from "./result";
+import wrapException from "./wrapException";
+
+const thisThrowsAsync = async () => {
+    throw new Error("throwing async");
+
+    return await Promise.resolve(1);
+};
+
+const res = await wrapException<ReturnType<typeof thisThrowsAsync>, Error>(
+    async () => thisThrowsAsync(),
+);
 
 if (res.isOk()) {
     // infered number
